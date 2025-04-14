@@ -40,6 +40,17 @@ A terminal-based expense tracker written in Python that lets you log, view, edit
 - A personal CSV file is created: `expenses_<username>.csv`
 - Your data stays separate from others
 
+This app supports multiple users with their own separate CSV files:
+
+- 🔐 Users can **Login or Signup** from the terminal.
+- 📁 When a user signs up, a new file like `expenses_<username>.csv` is created.
+- 🧾 Each user’s expenses are saved in their own file.
+- 💻 Data is **local-only** (not stored in a shared database or uploaded).
+- 🧪 You can test it by using the included `sample_expenses.csv`.
+
+> 📌 Real CSV files (like `expenses_demoname.csv`) are now excluded from the repository using `.gitignore`.
+
+
 ## 👨‍💻 Author
 
 Built with 💚 by [Pugazhenthi](https://github.com/Pugazhenthi06)
