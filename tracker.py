@@ -10,7 +10,7 @@ from sys import exit
 User_found = False
 
 while not User_found:
-    choice = input("Do you want to Login(L) or Signup(S): ").strip().lower()
+    choice = input("Do you want to Login(L) or Signup(S) or exit: ").strip().lower()
 
     if choice == 'l':
         username = input("Enter Username: ").strip()
@@ -41,8 +41,12 @@ while not User_found:
                 print("Signup successful! You are now logged in.")
                 User_found = True
 
+    elif choice=='exit':
+        exit()
+       
+    
     else:
-        print("Invalid choice. Please enter L or S.\n")
+         print("Invalid choice. Please enter L or S.\n")
 
 
 Expense_Tracker_File = fr'C:\Soft Skills\Expense_tracker\expenses_{username}.csv'
