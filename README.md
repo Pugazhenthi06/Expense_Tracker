@@ -34,7 +34,12 @@ A terminal-based expense tracker written in Python that lets you log, view, edit
    git clone https://github.com/Pugazhenthi06/Expense_Tracker.git
    cd Expense_Tracker
 
-   
+ ## 👥 Multiple User Support
+
+- Each user signs up with a username and password
+- A personal CSV file is created: `expenses_<username>.csv`
+- Your data stays separate from others
+
 ## 👨‍💻 Author
 
 Built with 💚 by [Pugazhenthi](https://github.com/Pugazhenthi06)
