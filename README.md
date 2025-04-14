@@ -50,6 +50,17 @@ This app supports multiple users with their own separate CSV files:
 
 > 📌 Real CSV files (like `expenses_demoname.csv`) are now excluded from the repository using `.gitignore`.
 
+## 🧪 Demo Data
+
+A file named `sample_expenses.csv` is included for testing.
+
+You can open it to see how expenses are stored and formatted:
+```csv
+2025-04-01,250,food,Lunch at local restaurant
+2025-04-02,80,travel,Bus fare to office
+...
+
+
 
 ## 👨‍💻 Author
 
