@@ -1,12 +1,28 @@
 import matplotlib.pyplot as plt
-import csv
-import os
+import csv,sys,os,hashlib
 from collections import defaultdict
 from tabulate import tabulate
 from datetime import datetime
 from sys import exit
 
 
+
+Expense_Tracker_File = ""
+
+
+base_dir = os.path.join(os.path.expanduser("~"), "ExpenseTracker")
+os.makedirs(base_dir, exist_ok=True)
+
+
+user_file_path = os.path.join(base_dir, "Users.csv")
+if not os.path.exists(user_file_path):
+    
+    with open(user_file_path, 'w', newline='') as f:
+        pass
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+    
 User_found = False
 
 while not User_found:
@@ -15,43 +31,68 @@ while not User_found:
     if choice == 'l':
         username = input("Enter Username: ").strip()
         password = input("Enter Password: ").strip()
-        with open(r'C:\Soft Skills\Expense_tracker\Users.csv', 'r') as f:
+
+        with open(user_file_path, 'r') as f:
             reader = csv.reader(f)
             for row in reader:
-                if row[0] == username and row[1] == password:
-                    print("Login successful")
+                hashed_input=hash_password(password)
+                if row[0].strip()==username and row[1].strip() == hashed_input:
+                    print("Login successful\n")
+                    input("Press Enter to Continue")
                     User_found = True
                     break
-            if not User_found:
+            else:
                 print("Invalid credentials. Try again.\n")
 
     elif choice == 's':
         username = input("Create a Username: ").strip()
-        with open(r'C:\Soft Skills\Expense_tracker\Users.csv', 'r') as f:
-            reader = csv.reader(f)
-            existing_users = [row[0] for row in reader]
+        with open(user_file_path, 'r') as f:
+            existing_users = [row[0] for row in csv.reader(f)]
 
         if username in existing_users:
             print("Username already exists. Try a different one.\n")
         else:
-            password = input("Create a strong password: ").strip()
-            with open(r'C:\Soft Skills\Expense_tracker\Users.csv', 'a', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow([username, password])
-                print("Signup successful! You are now logged in.")
-                User_found = True
-
-    elif choice=='exit':
-        exit()
-       
+            while  not User_found:
+                print("Note: Password should be atleast 8characters long, contains atleast one number, letter!")
+                password = input("Create a strong password: ").strip()
+                
+                if len(password)<8:
+                    print("Password should be at least 8 characters long.")
+                elif not any(char.isdigit() for char in password):
+                    print("Password should contain at least one number.")
+                elif not any(char.isalpha() for char in password):
+                    print("Password should contain at least one letter.")
+                else:
+                    confirm_password=input("Confirm password:").strip()
+                    
+                    if password!=confirm_password:
+                        print("passwords mismatch.  Please try again.")
+                    else:
+                        hashed_password=hash_password(password.strip())
+                        with open(user_file_path, 'a', newline='') as f:
+                            csv.writer(f).writerow([username.strip(), hashed_password.strip()])
+                            print("Signup successful! You are now logged in.")
+                            User_found = True
+                
     
+    elif choice == 'exit':
+        exit()
+
     else:
-         print("Invalid choice. Please enter L or S.\n")
+        print("Invalid choice. Please enter L or S.\n")
 
 
-Expense_Tracker_File = fr'C:\Soft Skills\Expense_tracker\expenses_{username}.csv'
+Expense_Tracker_File = os.path.join(base_dir, f"expenses_{username}.csv")
 
+
+
+
+def clear_screen():
+    if 'idlelib' not in sys.modules:
+        os.system('cls' if os.name=='nt' else 'clear')
+    
 def add_expense():
+    clear_screen()
     while True:
         try:
             amt = float(input("Enter amount spent: Rs."))
@@ -93,14 +134,21 @@ def view_expense():
             rows = list(reader)
             if not rows:
                 print("\nNo expenses recorded yet.")
+                
+                input("\n\n\tPress Enter to Continue")
                 return
             headers = ["Date", "Amount", "Category", "Note"]
             print("\nExpense History:\n")
             print(tabulate(rows, headers=headers, tablefmt="grid"))
+            
+            input("\n\n\tPress Enter to Continue")
     except FileNotFoundError:
         print("No expenses file found.")
+        
+        input("\n\n\tPress Enter to Continue")
 
 def total_spent():
+    clear_screen()
     total = 0
     try:
         with open(Expense_Tracker_File, 'r') as f:
@@ -129,7 +177,7 @@ def filter_by_field(field_index, search_value):
 
 def filter_by_category():
  
-
+    clear_screen()
     category_input = input("Enter the Category: ").lower()
 
     try:
@@ -161,6 +209,7 @@ def filter_by_category():
         print("Expense file not found.")
 
 def total_by_category():
+    clear_screen()
     category = input("Enter the Category: ").strip()
     total = 0
     found = False
@@ -187,6 +236,7 @@ def total_by_category():
         print("Expense file not found.")
 
 def filter_by_date():
+    clear_screen()
     date = input("Enter the Date (YYYY-MM-DD): ")
     if date:
             try:
@@ -204,6 +254,7 @@ def filter_by_date():
         print("No expenses found on this date.")
 
 def total_by_date():
+    clear_screen()
     date = input("Enter the Date (YYYY-MM-DD): ")
     if date:
             try:
@@ -230,6 +281,7 @@ def total_by_date():
         print("Expense file not found.")
 
 def filter_by_month():
+    clear_screen()
     month = input("Enter the Month (YYYY-MM): ")
     if month:
             try:
@@ -247,6 +299,7 @@ def filter_by_month():
         print("No expenses found in this month.")
 
 def total_by_month():
+    clear_screen()
     month = input("Enter the Month (YYYY-MM): ")
     if month:
             try:
@@ -273,6 +326,7 @@ def total_by_month():
         print("Expense file not found.")
 
 def filter_expenses():
+    clear_screen()
     print("\nChoose a filter to narrow down the expenses:")
     print("1. Filter by Category")
     print("2. Filter by Date")
@@ -319,6 +373,7 @@ def filter_expenses():
     return [row for (idx,row) in filtered_expenses]
 
 def delete_expense():
+    clear_screen()
     filtered_expenses = filter_expenses()
     
     if not filtered_expenses:
@@ -357,6 +412,7 @@ def delete_expense():
 
                
 def clear_expense():
+    clear_screen()
     command=input("Are you sure, want to delete all the expenses(y,n):").lower()
     if command=='y':
         try:
@@ -374,6 +430,7 @@ def clear_expense():
         
 
 def modify_expense():
+    clear_screen()
     filtered = filter_expenses()
 
     if not filtered:
@@ -458,6 +515,7 @@ def modify_expense():
         
 
 def plot_expenses():
+    clear_screen()
     categories = defaultdict(float)
 
     try:
@@ -484,6 +542,7 @@ def plot_expenses():
 
 
 while True:
+    clear_screen()
     print("\n--- Expense Tracker ---")
     print("1. Add Expense")
     print("2. View All Expenses")
