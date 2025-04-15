@@ -64,4 +64,4 @@ You can open it to see how expenses are stored and formatted:
 
 ## 👨‍💻 Author
 
-Built with 💚 by [Pugazhenthi](https://github.com/Pugazhenthi06)
+Built with 💚,chatgpt by [Pugazhenthi](https://github.com/Pugazhenthi06)
