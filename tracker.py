@@ -84,8 +84,10 @@ while not User_found:
 
 Expense_Tracker_File = os.path.join(base_dir, f"expenses_{username}.csv")
 
-
-
+def file_path():
+    clear_screen()
+    print("The folder where all user data is stored:",base_dir)
+    print("The File where their expenses are saved:",Expense_Tracker_File)
 
 def clear_screen():
     if 'idlelib' not in sys.modules:
@@ -550,10 +552,11 @@ while True:
     print("4. Totals")
     print("5. Edit & Delete Expense")
     print("6. Plot Expense")
-    print("7. Exit")
+    print("7. View File Paths")
+    print("8. Exit")
 
     try:
-        choice = int(input("Choose an option (1-7): "))
+        choice = int(input("Choose an option (1-8): "))
 
         if choice == 1:
             add_expense()
@@ -606,7 +609,7 @@ while True:
                 print("b. Modify")
                 print("c. Clear(Delete all the expenses)")
                 print("d. Exit")
-                choice=input("Enter the choice(a,b,c):")
+                choice=input("Enter the choice(a,b,c,d):")
                 if choice=='a':
                     delete_expense()
                 elif choice=='b':
@@ -619,7 +622,9 @@ while True:
                     print("Invalid option.")
         elif choice == 6:
             plot_expenses()
-        elif choice == 7:
+        elif choice ==7:
+            file_path()
+        elif choice == 8:
             confirm = input("Are you sure you want to exit? (y/n): ").lower()
             if confirm == 'y':
                 break
