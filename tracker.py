@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
-import csv,sys,os,hashlib
+import csv,sys,os,hashlib,warnings,time
 from collections import defaultdict
 from tabulate import tabulate
 from datetime import datetime
 from sys import exit
+from getpass import getpass
 
 
 
@@ -22,67 +23,82 @@ if not os.path.exists(user_file_path):
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
+
+def get_secure_password(prompt="Enter password:"):
     
-User_found = False
-
-while not User_found:
-    choice = input("Do you want to Login(L) or Signup(S) or exit: ").strip().lower()
-
-    if choice == 'l':
-        username = input("Enter Username: ").strip()
-        password = input("Enter Password: ").strip()
-
-        with open(user_file_path, 'r') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                hashed_input=hash_password(password)
-                if row[0].strip()==username and row[1].strip() == hashed_input:
-                    print("Login successful\n")
-                    input("Press Enter to Continue")
-                    User_found = True
-                    break
-            else:
-                print("Invalid credentials. Try again.\n")
-
-    elif choice == 's':
-        username = input("Create a Username: ").strip()
-        with open(user_file_path, 'r') as f:
-            existing_users = [row[0] for row in csv.reader(f)]
-
-        if username in existing_users:
-            print("Username already exists. Try a different one.\n")
-        else:
-            while  not User_found:
-                print("Note: Password should be atleast 8characters long, contains atleast one number, letter!")
-                password = input("Create a strong password: ").strip()
-                
-                if len(password)<8:
-                    print("Password should be at least 8 characters long.")
-                elif not any(char.isdigit() for char in password):
-                    print("Password should contain at least one number.")
-                elif not any(char.isalpha() for char in password):
-                    print("Password should contain at least one letter.")
-                else:
-                    confirm_password=input("Confirm password:").strip()
-                    
-                    if password!=confirm_password:
-                        print("passwords mismatch.  Please try again.")
-                    else:
-                        hashed_password=hash_password(password.strip())
-                        with open(user_file_path, 'a', newline='') as f:
-                            csv.writer(f).writerow([username.strip(), hashed_password.strip()])
-                            print("Signup successful! You are now logged in.")
-                            User_found = True
-                
-    
-    elif choice == 'exit':
-        exit()
-
+    if 'idlelib' in sys.modules or not sys.stdin.isatty():
+        input("\nWarning: Password may be visible due to limitations in this environment. Press Enter to continue...")
+        warnings.filterwarnings("ignore")
+        return getpass(prompt)
     else:
-        print("Invalid choice. Please enter L or S.\n")
+        input("\n[Security Notice] Your password will not appear on screen while typing. Press Enter to continue...")
+        return getpass(prompt)
 
 
-Expense_Tracker_File = os.path.join(base_dir, f"expenses_{username}.csv")
+def authenticate_user():     
+    User_found = False
+
+    while not User_found:
+        choice = input("Do you want to Login(L) or Signup(S) or exit: ").strip().lower()
+
+        if choice == 'l':
+            username = input("Enter Username: ").strip()
+        
+            password = get_secure_password("Enter Password:").strip()
+
+            with open(user_file_path, 'r') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    hashed_input=hash_password(password)
+                    if row[0].strip()==username and row[1].strip() == hashed_input:
+                        print("Login successful\n")
+                        input("Press Enter to Continue")
+                        User_found=True
+                        return username
+    
+                else:
+                    print("Invalid credentials. Try again.\n")
+
+        elif choice == 's':
+            username = input("Create a Username: ").strip()
+            with open(user_file_path, 'r') as f:
+                existing_users = [row[0] for row in csv.reader(f)]
+
+            if username in existing_users:
+                print("Username already exists. Try a different one.\n")
+            else:
+                while  not User_found:
+                    print("Note: Password should be atleast 8characters long, contains atleast one number, letter!")
+                
+                    password = get_secure_password("Enter Password:").strip()
+
+                    if len(password)<8:
+                        print("Password should be at least 8 characters long.")
+                    elif not any(char.isdigit() for char in password):
+                        print("Password should contain at least one number.")
+                    elif not any(char.isalpha() for char in password):
+                        print("Password should contain at least one letter.")
+                    else:
+                        confirm_password=get_secure_password("Confirm password:").strip()
+                    
+                        if password!=confirm_password:
+                            print("passwords mismatch.  Please try again.")
+                        else:
+                            hashed_password=hash_password(password.strip())
+                            with open(user_file_path, 'a', newline='') as f:
+                                csv.writer(f).writerow([username.strip(), hashed_password.strip()])
+                                print("Signup successful! You are now logged in.")
+                                User_found = True
+                                return username
+                
+    
+        elif choice == 'exit':
+            exit()
+
+        else:
+            print("Invalid choice. Please enter L or S.\n")
+
 
 def file_path():
     clear_screen()
@@ -545,93 +561,105 @@ def plot_expenses():
 
 while True:
     clear_screen()
-    print("\n--- Expense Tracker ---")
-    print("1. Add Expense")
-    print("2. View All Expenses")
-    print("3. Filters & Views")
-    print("4. Totals")
-    print("5. Edit & Delete Expense")
-    print("6. Plot Expense")
-    print("7. View File Paths")
-    print("8. Exit")
+    
+    username=authenticate_user()
+    Expense_Tracker_File = os.path.join(base_dir, f"expenses_{username}.csv")
 
-    try:
-        choice = int(input("Choose an option (1-8): "))
+    while True:
+        print("\n--- Expense Tracker ---")
+        print("1. Add Expense")
+        print("2. View All Expenses")
+        print("3. Filters & Views")
+        print("4. Totals")
+        print("5. Edit & Delete Expense")
+        print("6. Plot Expense")
+        print("7. File path ")
+        print("8. Log Out")
+        
+        try:
+            choice = int(input("Choose an option (1-8): "))
 
-        if choice == 1:
-            add_expense()
-        elif choice == 2:
-            view_expense()
-        elif choice == 3:
-            while True:
+            if choice == 1:
+                add_expense()
+            elif choice == 2:
+                view_expense()
+            elif choice == 3:
+                while True:
                 
-                print("\n-- Filter Options --")
-                print("a. Filter by Category")
-                print("b. Filter by Date")
-                print("c. Filter by Month")
-                print("d. Exit")
-                sub_choice = input("Choose a filter (a-d): ").lower()
-                if sub_choice == 'a':
-                    filter_by_category()
-                elif sub_choice == 'b':
-                    filter_by_date()
-                elif sub_choice == 'c':
-                    filter_by_month()
-                elif sub_choice=='d':
+                    print("\n-- Filter Options --")
+                    print("a. Filter by Category")
+                    print("b. Filter by Date")
+                    print("c. Filter by Month")
+                    print("d. Exit")
+                    sub_choice = input("Choose a filter (a-d): ").lower()
+                    if sub_choice == 'a':
+                        filter_by_category()
+                    elif sub_choice == 'b':
+                        filter_by_date()
+                    elif sub_choice == 'c':
+                        filter_by_month()
+                    elif sub_choice=='d':
+                        break
+                    else:
+                        print("Invalid filter option.")
+            elif choice == 4:
+                while True:
+                    print("\n-- Totals --")
+                    print("a. Total by Category")
+                    print("b. Total by Date")
+                    print("c. Total by Month")
+                    print("d. Total Spent")
+                    print("e. Exit")
+                    sub_choice = input("Choose a total option (a-e): ").lower()
+                    if sub_choice == 'a':
+                        total_by_category()
+                    elif sub_choice == 'b':
+                        total_by_date()
+                    elif sub_choice == 'c':
+                        total_by_month()
+                    elif sub_choice == 'd':
+                        total_spent()
+                    elif sub_choice=='e':
+                        break
+                    else:
+                        print("Invalid total option.")
+            elif choice == 5:
+                while True:
+                    print("\nOptions")
+                    print("a. Delete")
+                    print("b. Modify")
+                    print("c. Clear(Delete all the expenses)")
+                    print("d. Exit")
+                    choice=input("Enter the choice(a,b,c,d):")
+                    if choice=='a':
+                        delete_expense()
+                    elif choice=='b':
+                        modify_expense()
+                    elif choice=='c':
+                        clear_expense()
+                    elif choice=='d':
+                        break
+                    else:
+                        print("Invalid option.")
+            elif choice == 6:
+                plot_expenses()
+            elif choice==7:
+                file_path()
+            
+            elif choice == 8:
+                confirm = input("Are You Sure want to log out (y/n): ").lower()
+                if confirm == 'y':
+                    print("Log Out Successful, Wait a second")
+                    time.sleep(2)
                     break
+                elif confirm =='n':
+                    print("Log Out Unsuccessful, Wait a second")
+                    time.sleep(2)
+                   
                 else:
-                    print("Invalid filter option.")
-        elif choice == 4:
-            while True:
-                print("\n-- Totals --")
-                print("a. Total by Category")
-                print("b. Total by Date")
-                print("c. Total by Month")
-                print("d. Total Spent")
-                print("e. Exit")
-                sub_choice = input("Choose a total option (a-e): ").lower()
-                if sub_choice == 'a':
-                    total_by_category()
-                elif sub_choice == 'b':
-                    total_by_date()
-                elif sub_choice == 'c':
-                    total_by_month()
-                elif sub_choice == 'd':
-                    total_spent()
-                elif sub_choice=='e':
-                    break
-                else:
-                    print("Invalid total option.")
-        elif choice == 5:
-            while True:
-                print("\nOptions")
-                print("a. Delete")
-                print("b. Modify")
-                print("c. Clear(Delete all the expenses)")
-                print("d. Exit")
-                choice=input("Enter the choice(a,b,c,d):")
-                if choice=='a':
-                    delete_expense()
-                elif choice=='b':
-                    modify_expense()
-                elif choice=='c':
-                    clear_expense()
-                elif choice=='d':
-                    break
-                else:
-                    print("Invalid option.")
-        elif choice == 6:
-            plot_expenses()
-        elif choice ==7:
-            file_path()
-        elif choice == 8:
-            confirm = input("Are you sure you want to exit? (y/n): ").lower()
-            if confirm == 'y':
-                break
-        else:
-            print("Invalid choice. Try again.")
-    except ValueError:
-        print("Invalid input. Please enter a number between 1 and 7.")
+                    print("Invalid choice. Please enter (y/n)")
+        except ValueError:
+            print("Invalid input. Please enter a number between 1 and 8.")
 
 
 
