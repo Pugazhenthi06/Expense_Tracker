@@ -20,7 +20,21 @@ if not os.path.exists(user_file_path):
     
     with open(user_file_path, 'w', newline='') as f:
         pass
+def Valid_month(month):
+    try:
+        valid_month=datetime.strptime(month, "%Y-%m").strftime("%Y-%m")
+        return valid_month
+    except ValueError:
+        print("Invalid Date Format")
 
+def Valid_date(date):
+    try:
+        valid_date=datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m-%d")
+        return valid_date
+    except ValueError:
+        print("Invalid Date Format")
+        
+    
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -28,7 +42,7 @@ def hash_password(password):
 def get_secure_password(prompt="Enter password:"):
     
     if 'idlelib' in sys.modules or not sys.stdin.isatty():
-        input("\nWarning: Password may be visible due to limitations in this environment. Press Enter to continue...")
+        input("\nWarning: Password may be visible due to limitations in this environment.\n Press Enter to continue...")
         warnings.filterwarnings("ignore")
         return getpass(prompt)
     else:
@@ -36,7 +50,8 @@ def get_secure_password(prompt="Enter password:"):
         return getpass(prompt)
 
 
-def authenticate_user():     
+def authenticate_user():
+    clear_screen()
     User_found = False
 
     while not User_found:
@@ -117,12 +132,7 @@ def add_expense():
             category = input("Enter category (food, travel, bills, health, others): ").lower()
             date = input("Enter date (YYYY-MM-DD) or press Enter for today: ")
             if date:
-                try:
-                    valid_date=datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m-%d")
-
-                except ValueError:
-                    print("Invalid date format. Please use YYYY-MM-DD")
-                    return
+                valid_date=Valid_date(date)
             else:
                 valid_date = datetime.now().strftime("%Y-%m-%d")
                 
@@ -146,6 +156,7 @@ def add_expense():
         
 
 def view_expense():
+    clear_screen()
     try:
         with open(Expense_Tracker_File, 'r') as f:
             reader = csv.reader(f)
@@ -153,17 +164,17 @@ def view_expense():
             if not rows:
                 print("\nNo expenses recorded yet.")
                 
-                input("\n\n\tPress Enter to Continue")
+                input("\nPress Enter to Continue")
                 return
             headers = ["Date", "Amount", "Category", "Note"]
             print("\nExpense History:\n")
             print(tabulate(rows, headers=headers, tablefmt="grid"))
             
-            input("\n\n\tPress Enter to Continue")
+            input("\nPress Enter to Continue")
     except FileNotFoundError:
         print("No expenses file found.")
         
-        input("\n\n\tPress Enter to Continue")
+        input("\nPress Enter to Continue")
 
 def total_spent():
     clear_screen()
@@ -298,17 +309,13 @@ def total_by_date():
     except FileNotFoundError:
         print("Expense file not found.")
 
-def filter_by_month():
+def filter_by_month(Month=None):
     clear_screen()
-    month = input("Enter the Month (YYYY-MM): ")
-    if month:
-            try:
-                valid_month=datetime.strptime(month, "%Y-%m").strftime("%Y-%m")
-               
-            except ValueError:
-                print("Invalid date format. Please use YYYY-MM")
-                return
-       
+    if Month is None:
+        month = input("Enter the Month (YYYY-MM): ")
+    else:
+        month=Month
+    valid_month=Valid_month()
     rows = filter_by_field(0,valid_month)
     if rows:
         headers=["date", "Amount", "Category", "Note"]
@@ -319,13 +326,7 @@ def filter_by_month():
 def total_by_month():
     clear_screen()
     month = input("Enter the Month (YYYY-MM): ")
-    if month:
-            try:
-                valid_month=datetime.strptime(month, "%Y-%m").strftime("%Y-%m")
-                 
-            except ValueError:
-                print("Invalid date format. Please use YYYY-MM")
-                return
+    valid_month=Valid_month(month)
         
     total = 0
     found = False
@@ -407,7 +408,7 @@ def delete_expense():
         print("Invalid input. Please enter a valid number.")
         return
 
-    # Assume filtered_expenses[choice] is already in [date, amount, category, note] format
+
     row_to_delete = filtered_expenses[choice]
     print("You chose to delete:", row_to_delete)
     
@@ -418,7 +419,6 @@ def delete_expense():
         print("Expense file not found.")
         return
 
-    # Directly compare rows (no normalization needed)
     updated_rows = [row for row in rows if row != row_to_delete]
     
     if len(updated_rows)<len(rows):
@@ -529,7 +529,51 @@ def modify_expense():
             print("Error: Expense not found in file.")
             continue
     
-
+def monthly_summary():
+    clear_screen()
+    try:
+        category_wise_amount=[]
+        amount=[]
+        total_spent=0
+        month=input("Enter Month(YYYY-MM):")
+        valid_month=Valid_month(month)
+        rows=filter_by_field(0,valid_month)
+        if rows:
+            print(f"\n\t Summary for {valid_month}\n") 
+            for row in rows:
+                total_spent+=float(row[1])
+                category_wise_amount.append([row[2],row[1]])
+            print(f"\nTotal Spent : Rs.{total_spent}")
+            for row in category_wise_amount:
+                amount.append(float(row[1]))
+            high_amount=max(amount)
+            for row in category_wise_amount:
+                if(float(row[1])==high_amount):
+                    top_category=row[0]
+                    print(f"\nTop Category : {row[0]}")
+            for row in rows:
+                if(float(row[1])==high_amount and row[2]==top_category):
+                    print(f"\nBiggest Expense: Rs.{high_amount} on {row[0]}[{row[2]}]")
+                
+            print("\n\n\tCategory-wise Breakdown:")
+            headers=[ "Category","Amount" ]
+            print(tabulate(category_wise_amount, headers=headers, tablefmt="grid"))
+        else:
+             print("No data found for this month.")
+             return
+        time.sleep(1)
+        labels=[row[0] for row in category_wise_amount]
+        sizes=[float(row[1]) for row in category_wise_amount]
+        plt.figure(figsize=(8,8))
+        plt.pie(sizes,labels=labels,autopct='%1.1f%%',startangle=90,wedgeprops={'edgecolor':'black'}, colors=['#ff9999', '#66b3ff', '#99ff99', '#ffcc99', '#c2c2f0'])
+        plt.axis("equal")
+        plt.title("Monthly Expense Summary")
+        plt.tight_layout()
+        plt.show()
+        input("Press Enter To Continue...")
+    except  Exception as e:
+        print(f"Error occured: {e}")
+        
         
 
 def plot_expenses():
@@ -546,18 +590,50 @@ def plot_expenses():
         print("Expense file not found.")
 
     if categories:
-        # Create the pie chart
-        plt.figure(figsize=(8, 8))  # Optional: Adjust the size of the pie chart
+       
+        plt.figure(figsize=(8, 8))  
         plt.pie(categories.values(), labels=categories.keys(), autopct='%1.1f%%',wedgeprops={'edgecolor':'black'}, colors=['#ff9999', '#66b3ff', '#99ff99', '#ffcc99', '#c2c2f0'])
         plt.axis('equal')
-        # Title for the pie chart
+        
         plt.title('Expense Distribution by Category')
         
-        # Display the chart
+        plt.tight_layout()
         plt.show()
     else:
         print("No data to plot.")
 
+def plot_monthly_totals():
+    clear_screen()
+    monthly_totals=defaultdict(float)
+    try:
+        with open(Expense_Tracker_File, 'r') as f:
+            reader = list(csv.reader(f))
+            for row in reader:
+                month=(row[0][:7])
+                amount=float(row[1])
+                monthly_totals[month]+=amount
+
+        monthly_totals=dict(sorted(monthly_totals.items()))
+        
+        labels=list(monthly_totals.keys())
+        values=list(monthly_totals.values())
+        plt.figure(figsize=(10,6))
+        plt.bar(labels,values,color='skyblue')
+        plt.xlabel("Month")
+        plt.ylabel("Total Expenses(Rs.)")
+        plt.title("Monthy Expense Summary")
+        plt.xticks(rotation=45)
+        plt.grid(True,axis='y')
+        plt.tight_layout()
+        plt.show()
+        
+    except FileNotFoundError:
+        print("Expense file not found.")
+        return []
+    except Exception as e:
+        print(f"An error occured:{e}")
+        return None
+        
 
 while True:
     clear_screen()
@@ -566,13 +642,14 @@ while True:
     Expense_Tracker_File = os.path.join(base_dir, f"expenses_{username}.csv")
 
     while True:
+        clear_screen()
         print("\n--- Expense Tracker ---")
         print("1. Add Expense")
         print("2. View All Expenses")
         print("3. Filters & Views")
         print("4. Totals")
         print("5. Edit & Delete Expense")
-        print("6. Plot Expense")
+        print("6. Expense Chart")
         print("7. File path ")
         print("8. Log Out")
         
@@ -582,7 +659,20 @@ while True:
             if choice == 1:
                 add_expense()
             elif choice == 2:
-                view_expense()
+                while True:
+                    print("a. Total Expenses")
+                    print("b. Monthly Expenses")
+                    print("c. Exit")
+                    choice=input("Enter the Choice(a/b/c):")
+                    if choice=='a': 
+                        view_expense()
+                    elif choice=='b':
+                       monthly_summary()
+                    elif choice=='c':
+                        break
+                    else:
+                        print("Invalid Choice")
+                
             elif choice == 3:
                 while True:
                 
@@ -642,7 +732,20 @@ while True:
                     else:
                         print("Invalid option.")
             elif choice == 6:
-                plot_expenses()
+                while True:
+                    print("a. Overall Expense")
+                    print("b. Monthly Expense")
+                    print("c. Exit")
+                    choice=input("Enter the Choice (a/b/c):")
+                    if choice=='a':              
+                        plot_expenses()
+                    elif choice=='b':
+                        plot_monthly_totals()
+                    elif choice=='c':
+                        break
+                    else:
+                        print("Invalid Choice.  Try Again")
+                        
             elif choice==7:
                 file_path()
             
