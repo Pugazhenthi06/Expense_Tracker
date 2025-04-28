@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>Expense Tracker</h1>
+
+  <form action="/add" method="POST">
+    <input type="date" name="date" required>
+    <input type="number" name="amount" step="0.01" required placeholder="Amount">
+    <input type="text" name="category" required placeholder="Category">
+    <input type="text" name="note" placeholder="Note">
+    <button type="submit">Add Expense</button>
+  </form>
+
+  <table>
+    <tr>
+      <th>Date</th><th>Amount</th><th>Category</th><th>Note</th>
+    </tr>
+    {% for e in expenses %}
+    <tr>
+      <td>{{ e.date }}</td>
+      <td>{{ e.amount }}</td>
+      <td>{{ e.category }}</td>
+      <td>{{ e.note }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>

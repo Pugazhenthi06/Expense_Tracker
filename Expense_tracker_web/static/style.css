@@ -1,0 +1,17 @@
+body {
+    font-family: sans-serif;
+    margin: 20px;
+}
+input, button {
+    margin: 5px;
+    padding: 10px;
+}
+table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 8px;
+    border: 1px solid #ccc;
+}
